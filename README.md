@@ -31,43 +31,49 @@ docker run -d --name sonarqube -p 9000:9000 sonarqube
 •	Open Jenkins dashboard.
 •	Create a new pipeline project.
 •	Configure the pipeline script similar to the one you provided, ensuring the correct SonarQube URL and Git repository URL are used.
+```
 
-
-pipeline {
-    agent any
-    stages {
-        stage('SCM') {
-            steps { // this step will checkouut project to jenkins local workspace.
-                git url: 'https://github.com/somajoshi88/star-agile-insurance-project.git'
+    pipeline {
+        agent any
+        stages {
+            stage('SCM') {
+                steps {
+                     // this step will checkouut project to jenkins local workspace.
+                    git url: 'https://github.com/somajoshi88/star-agile-insurance-project.git'
+                }
             }
-        }
-        stage('build && SonarQube analysis') {
-            steps {
-                // name 'Sonar' is configured => manage jenkins=> System=>Configure global setting and paths => 
-                // SonarQube servers => SonarQube installations => Name (sonar) and server url (http://localhost:9002) and sonarqube token(generate from sonarqube and configure in jenkins credentials and use var here)
-                // manage jenkins=> Configure tools =>SonarQube Scanner installations=>Add SonarQube Scanner=>Install automatically =>Install from Maven Central
-                withSonarQubeEnv('Sonar') { 
-                
-                    // name 'maven' is configured =>Tools =>Configure tools ,thier location and automatic installer =>Maven installations => name (maven) and MAVEN_HOME  
-                    withMaven(maven:'maven') { // following step will build jenkins local workspace project and request sonar to review target folder.
-                        bat 'mvn clean package sonar:sonar -Dsonar.host.url=http://localhost:9002 -Dsonar.java.binaries=target'
+            stage('build && SonarQube analysis') {
+                steps {
+
+                    // name 'Sonar' is configured => manage jenkins=> System=>Configure global setting and paths => 
+                    // SonarQube servers => SonarQube installations => Name (sonar) and server url (http://localhost:9002) and sonarqube token(generate from sonarqube and configure in jenkins credentials and use var here)
+                    // manage jenkins=> Configure tools =>SonarQube Scanner installations=>Add SonarQube Scanner=>Install automatically =>Install from Maven Central
+
+                    withSonarQubeEnv('Sonar') {
+                    
+                        // name 'maven' is configured =>Tools =>Configure tools ,thier location and automatic installer =>Maven installations => name (maven) and MAVEN_HOME  
+                        withMaven(maven:'maven') {
+
+                            // following step will build jenkins local workspace project and request sonar to review target folder.
+                            bat 'mvn clean package sonar:sonar -Dsonar.host.url=http://localhost:9002 -Dsonar.java.binaries=target'
+
+                        }
+                    }
+                }
+            }
+            stage("Quality Gate") {
+                steps {
+                    timeout(time: 1, unit: 'HOURS') {
+                        // Parameter indicates whether to set pipeline to UNSTABLE if Quality Gate fails
+                        // true = set pipeline to UNSTABLE, false = don't
+                        waitForQualityGate abortPipeline: true
                     }
                 }
             }
         }
-        stage("Quality Gate") {
-            steps {
-                timeout(time: 1, unit: 'HOURS') {
-                    // Parameter indicates whether to set pipeline to UNSTABLE if Quality Gate fails
-                    // true = set pipeline to UNSTABLE, false = don't
-                    waitForQualityGate abortPipeline: true
-                }
-            }
-        }
     }
-}
 
-
+```
 6.	Set Up Webhook in SonarQube:
 •	Access SonarQube web UI (http://localhost:9000).
 •	Navigate to project > project setting > Webhooks.
