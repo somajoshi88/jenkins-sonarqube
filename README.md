@@ -31,6 +31,8 @@ docker run -d --name sonarqube -p 9000:9000 sonarqube
 •	Open Jenkins dashboard.
 •	Create a new pipeline project.
 •	Configure the pipeline script similar to the one you provided, ensuring the correct SonarQube URL and Git repository URL are used.
+
+
 pipeline {
     agent any
     stages {
@@ -64,6 +66,8 @@ pipeline {
         }
     }
 }
+
+
 6.	Set Up Webhook in SonarQube:
 •	Access SonarQube web UI (http://localhost:9000).
 •	Navigate to project > project setting > Webhooks.
